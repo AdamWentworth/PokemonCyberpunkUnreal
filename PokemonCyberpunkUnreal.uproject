@@ -2,10 +2,10 @@
   "FileVersion": 3,
   "EngineAssociation": "{6F4CB0A2-4199-7370-55B8-4DAF72AAFFD6}",
   "Category": "",
-  "Description": "",
+  "Description": "Unreal prototype for PokemonCyberpunk; the Phlosion project is separate.",
   "Modules": [
     {
-      "Name": "PokemonCyberpunk",
+      "Name": "PokemonCyberpunkUnreal",
       "Type": "Runtime",
       "LoadingPhase": "Default",
       "AdditionalDependencies": [
