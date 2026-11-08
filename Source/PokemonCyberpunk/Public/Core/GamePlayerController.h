@@ -4,7 +4,7 @@
 #include "GameFramework/PlayerController.h"
 #include "GamePlayerController.generated.h"
 
-class AWillieCharacter;
+class ADialogueCharacter;
 class UDialogueWidget;
 class UInputMappingContext;
 
@@ -15,7 +15,7 @@ class POKEMONCYBERPUNK_API AGamePlayerController : public APlayerController
 
 public:
 	void ShowInteractionPrompt(const FText& Prompt);
-	bool OpenDialogue(AWillieCharacter* Speaker);
+	bool OpenDialogue(ADialogueCharacter* Speaker);
 	void AdvanceDialogue();
 	void RefreshDialogue();
 	void CloseDialogue();
@@ -38,6 +38,6 @@ private:
 	UPROPERTY(Transient)
 	TObjectPtr<UDialogueWidget> DialogueUI;
 
-	TWeakObjectPtr<AWillieCharacter> ActiveSpeaker;
+	TWeakObjectPtr<ADialogueCharacter> ActiveSpeaker;
 	bool bInDialogue = false;
 };

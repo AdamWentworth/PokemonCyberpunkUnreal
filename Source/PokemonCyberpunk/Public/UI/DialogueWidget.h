@@ -4,7 +4,7 @@
 #include "Blueprint/UserWidget.h"
 #include "DialogueWidget.generated.h"
 
-class AWillieCharacter;
+class ADialogueCharacter;
 class UBorder;
 class UButton;
 class UHorizontalBox;
@@ -17,7 +17,7 @@ class POKEMONCYBERPUNK_API UDialogueWidget : public UUserWidget
 
 public:
 	void ShowPrompt(const FText& Prompt);
-	void ShowConversation(AWillieCharacter* Trainer);
+	void ShowConversation(ADialogueCharacter* Character);
 	void HideConversation();
 	void RefreshConversation();
 
@@ -33,6 +33,9 @@ protected:
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UBorder> DialoguePanel;
+
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UTextBlock> SpeakerName;
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UTextBlock> DialogueText;
@@ -63,13 +66,13 @@ private:
 	void ContinueDialogue();
 
 	UFUNCTION()
-	void AcceptBattle();
+	void ChooseYes();
 
 	UFUNCTION()
-	void DeclineBattle();
+	void ChooseNo();
 
 	void SelectAnswer(bool bYes);
 
-	TWeakObjectPtr<AWillieCharacter> Speaker;
+	TWeakObjectPtr<ADialogueCharacter> Speaker;
 	bool bYesSelected = true;
 };

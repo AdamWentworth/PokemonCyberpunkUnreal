@@ -1,6 +1,6 @@
 #include "UI/DialogueWidget.h"
 
-#include "Character/WillieCharacter.h"
+#include "Character/DialogueCharacter.h"
 #include "Components/Border.h"
 #include "Components/Button.h"
 #include "Components/HorizontalBox.h"
@@ -11,8 +11,8 @@
 void UDialogueWidget::NativeOnInitialized()
 {
 	Super::NativeOnInitialized();
-	YesButton->OnClicked.AddDynamic(this, &UDialogueWidget::AcceptBattle);
-	NoButton->OnClicked.AddDynamic(this, &UDialogueWidget::DeclineBattle);
+	YesButton->OnClicked.AddDynamic(this, &UDialogueWidget::ChooseYes);
+	NoButton->OnClicked.AddDynamic(this, &UDialogueWidget::ChooseNo);
 	ContinueButton->OnClicked.AddDynamic(this, &UDialogueWidget::ContinueDialogue);
 	TalkPrompt->SetVisibility(ESlateVisibility::Collapsed);
 	DialoguePanel->SetVisibility(ESlateVisibility::Collapsed);
@@ -25,9 +25,9 @@ void UDialogueWidget::ShowPrompt(const FText& Prompt)
 	if (bVisible) PromptText->SetText(FText::Format(LOCTEXT("InteractionPrompt", "E  -  {0}"), Prompt));
 }
 
-void UDialogueWidget::ShowConversation(AWillieCharacter* Trainer)
+void UDialogueWidget::ShowConversation(ADialogueCharacter* Character)
 {
-	Speaker = Trainer;
+	Speaker = Character;
 	bYesSelected = true;
 	TalkPrompt->SetVisibility(ESlateVisibility::Collapsed);
 	DialoguePanel->SetVisibility(ESlateVisibility::Visible);
@@ -46,8 +46,9 @@ void UDialogueWidget::RefreshConversation()
 	{
 		return;
 	}
+	SpeakerName->SetText(Speaker->GetSpeakerName().ToUpper());
 	DialogueText->SetText(Speaker->GetCurrentLine());
-	const bool bChoosing = Speaker->DialogueStage == EWillieDialogueStage::BattleChoice;
+	const bool bChoosing = Speaker->IsChoosingResponse();
 	Choices->SetVisibility(bChoosing ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
 	ContinueButton->SetVisibility(bChoosing ? ESlateVisibility::Collapsed : ESlateVisibility::Visible);
 	ControlsText->SetText(bChoosing
@@ -72,19 +73,19 @@ void UDialogueWidget::ContinueDialogue()
 	}
 }
 
-void UDialogueWidget::AcceptBattle()
+void UDialogueWidget::ChooseYes()
 {
 	if (Speaker.IsValid())
 	{
-		Speaker->ChooseBattle(true);
+		Speaker->ChooseResponse(true);
 	}
 }
 
-void UDialogueWidget::DeclineBattle()
+void UDialogueWidget::ChooseNo()
 {
 	if (Speaker.IsValid())
 	{
-		Speaker->ChooseBattle(false);
+		Speaker->ChooseResponse(false);
 	}
 }
 
@@ -95,12 +96,12 @@ FReply UDialogueWidget::NativeOnKeyDown(const FGeometry& Geometry, const FKeyEve
 		return Super::NativeOnKeyDown(Geometry, KeyEvent);
 	}
 	const FKey Key = KeyEvent.GetKey();
-	const bool bChoosing = Speaker->DialogueStage == EWillieDialogueStage::BattleChoice;
+	const bool bChoosing = Speaker->IsChoosingResponse();
 	if (Key == EKeys::E || Key == EKeys::Enter || Key == EKeys::SpaceBar)
 	{
 		if (!KeyEvent.IsRepeat())
 		{
-			if (bChoosing) Speaker->ChooseBattle(bYesSelected);
+			if (bChoosing) Speaker->ChooseResponse(bYesSelected);
 			else ContinueDialogue();
 		}
 		return FReply::Handled();
@@ -114,7 +115,7 @@ FReply UDialogueWidget::NativeOnKeyDown(const FGeometry& Geometry, const FKeyEve
 	{
 		if (!KeyEvent.IsRepeat())
 		{
-			if (bChoosing) DeclineBattle();
+			if (bChoosing) ChooseNo();
 			else Speaker->CancelConversation();
 		}
 		return FReply::Handled();

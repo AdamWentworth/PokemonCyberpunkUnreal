@@ -2,7 +2,7 @@
 
 #include "Blueprint/WidgetBlueprintLibrary.h"
 #include "Character/WesCharacter.h"
-#include "Character/WillieCharacter.h"
+#include "Character/DialogueCharacter.h"
 #include "Engine/LocalPlayer.h"
 #include "EnhancedInputSubsystems.h"
 #include "UI/DialogueWidget.h"
@@ -34,7 +34,7 @@ void AGamePlayerController::ShowInteractionPrompt(const FText& Prompt)
 	if (DialogueUI) DialogueUI->ShowPrompt(bInDialogue ? FText::GetEmpty() : Prompt);
 }
 
-bool AGamePlayerController::OpenDialogue(AWillieCharacter* Speaker)
+bool AGamePlayerController::OpenDialogue(ADialogueCharacter* Speaker)
 {
 	if (bInDialogue || !DialogueUI || !IsValid(Speaker)) return false;
 	ActiveSpeaker = Speaker;
