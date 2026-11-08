@@ -1,4 +1,4 @@
-#include "WesCharacter.h"
+#include "Character/WesCharacter.h"
 
 #include "Animation/AnimSingleNodeInstance.h"
 #include "Animation/BlendSpace1D.h"
