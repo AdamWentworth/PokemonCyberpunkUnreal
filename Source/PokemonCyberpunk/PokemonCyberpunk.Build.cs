@@ -1,8 +1,8 @@
 using UnrealBuildTool;
 
-public class PokemonCyberpunkUnreal : ModuleRules
+public class PokemonCyberpunk : ModuleRules
 {
-	public PokemonCyberpunkUnreal(ReadOnlyTargetRules Target) : base(Target)
+	public PokemonCyberpunk(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 

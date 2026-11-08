@@ -5,7 +5,7 @@
   "Description": "Unreal prototype for PokemonCyberpunk; the Phlosion project is separate.",
   "Modules": [
     {
-      "Name": "PokemonCyberpunkUnreal",
+      "Name": "PokemonCyberpunk",
       "Type": "Runtime",
       "LoadingPhase": "Default",
       "AdditionalDependencies": [
