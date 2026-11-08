@@ -19,9 +19,13 @@ public:
 	void AdvanceDialogue();
 	void RefreshDialogue();
 	void CloseDialogue();
+	void BeginBattleView(AActor* BattleView);
 
 	UFUNCTION(BlueprintPure, Category = "Dialogue")
 	bool IsInDialogue() const { return bInDialogue; }
+
+	UFUNCTION(BlueprintPure, Category = "Battle")
+	bool IsInBattle() const { return bInBattle; }
 
 protected:
 	virtual void BeginPlay() override;
@@ -40,4 +44,5 @@ private:
 
 	TWeakObjectPtr<ADialogueCharacter> ActiveSpeaker;
 	bool bInDialogue = false;
+	bool bInBattle = false;
 };

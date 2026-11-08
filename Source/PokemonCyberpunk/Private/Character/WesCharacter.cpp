@@ -90,7 +90,7 @@ void AWesCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 
 void AWesCharacter::Move(const FInputActionValue& Value)
 {
-	if (!Controller || IsInDialogue())
+	if (!Controller || Controller->IsMoveInputIgnored())
 	{
 		return;
 	}
@@ -102,7 +102,7 @@ void AWesCharacter::Move(const FInputActionValue& Value)
 
 void AWesCharacter::Look(const FInputActionValue& Value)
 {
-	if (IsInDialogue()) return;
+	if (!Controller || Controller->IsLookInputIgnored()) return;
 	const FVector2D Direction = Value.Get<FVector2D>();
 	AddControllerYawInput(Direction.X);
 	AddControllerPitchInput(Direction.Y);
@@ -110,7 +110,7 @@ void AWesCharacter::Look(const FInputActionValue& Value)
 
 void AWesCharacter::StartRunning()
 {
-	if (IsInDialogue()) return;
+	if (!Controller || Controller->IsMoveInputIgnored()) return;
 	GetCharacterMovement()->MaxWalkSpeed = RunSpeed;
 }
 
@@ -128,7 +128,7 @@ void AWesCharacter::Tick(float DeltaTime)
 	}
 	if (AGamePlayerController* Player = Cast<AGamePlayerController>(GetController()))
 	{
-		UPrimitiveComponent* Target = IsInDialogue() ? nullptr : FindInteractionTarget();
+		UPrimitiveComponent* Target = Player->IsInDialogue() || Player->IsInBattle() ? nullptr : FindInteractionTarget();
 		IInteractable* Interactable = Target ? Cast<IInteractable>(Target->GetOwner()) : nullptr;
 		Player->ShowInteractionPrompt(Interactable ? Interactable->GetInteractionPrompt() : FText::GetEmpty());
 	}
@@ -166,7 +166,9 @@ UPrimitiveComponent* AWesCharacter::FindInteractionTarget() const
 
 void AWesCharacter::Interact()
 {
-	if (AGamePlayerController* Player = Cast<AGamePlayerController>(GetController()); Player && Player->IsInDialogue())
+	AGamePlayerController* Player = Cast<AGamePlayerController>(GetController());
+	if (!Player || Player->IsInBattle()) return;
+	if (Player->IsInDialogue())
 	{
 		Player->AdvanceDialogue();
 	}

@@ -5,6 +5,7 @@
 #include "Character/DialogueCharacter.h"
 #include "Engine/LocalPlayer.h"
 #include "EnhancedInputSubsystems.h"
+#include "GameFramework/PawnMovementComponent.h"
 #include "UI/DialogueWidget.h"
 
 void AGamePlayerController::SetupInputComponent()
@@ -31,12 +32,12 @@ void AGamePlayerController::BeginPlay()
 
 void AGamePlayerController::ShowInteractionPrompt(const FText& Prompt)
 {
-	if (DialogueUI) DialogueUI->ShowPrompt(bInDialogue ? FText::GetEmpty() : Prompt);
+	if (DialogueUI) DialogueUI->ShowPrompt(bInDialogue || bInBattle ? FText::GetEmpty() : Prompt);
 }
 
 bool AGamePlayerController::OpenDialogue(ADialogueCharacter* Speaker)
 {
-	if (bInDialogue || !DialogueUI || !IsValid(Speaker)) return false;
+	if (bInDialogue || bInBattle || !DialogueUI || !IsValid(Speaker)) return false;
 	ActiveSpeaker = Speaker;
 	bInDialogue = true;
 	if (AWesCharacter* Wes = Cast<AWesCharacter>(GetPawn()))
@@ -71,6 +72,21 @@ void AGamePlayerController::CloseDialogue()
 	SetIgnoreLookInput(false);
 	SetShowMouseCursor(false);
 	UWidgetBlueprintLibrary::SetInputMode_GameOnly(this, true);
+}
+
+void AGamePlayerController::BeginBattleView(AActor* BattleView)
+{
+	if (bInDialogue || bInBattle || !IsValid(BattleView)) return;
+	bInBattle = true;
+	if (APawn* PlayerPawn = GetPawn())
+	{
+		PlayerPawn->ConsumeMovementInputVector();
+		if (UPawnMovementComponent* Movement = PlayerPawn->GetMovementComponent()) Movement->StopMovementImmediately();
+	}
+	ShowInteractionPrompt(FText::GetEmpty());
+	SetIgnoreMoveInput(true);
+	SetIgnoreLookInput(true);
+	SetViewTarget(BattleView);
 }
 
 void AGamePlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
