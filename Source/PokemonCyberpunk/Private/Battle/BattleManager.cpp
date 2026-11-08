@@ -1,4 +1,5 @@
 #include "Battle/BattleManager.h"
+#include "Battle/BattlePokemon.h"
 
 #include "Camera/CameraComponent.h"
 #include "Character/WillieCharacter.h"
@@ -28,6 +29,11 @@ void ABattleManager::StartBattle(AWillieCharacter* Trainer)
 	if (!IsValid(Trainer) || Trainer != Opponent) return;
 	if (AGamePlayerController* Player = Cast<AGamePlayerController>(UGameplayStatics::GetPlayerController(this, 0)))
 	{
+		if (Player->IsInBattle() || Player->IsInDialogue()) return;
 		Player->BeginBattleView(this);
+		for (ABattlePokemon* Pokemon : PlayerTeam)
+		{
+			if (IsValid(Pokemon)) Pokemon->EnterBattle();
+		}
 	}
 }

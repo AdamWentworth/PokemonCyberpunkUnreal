@@ -5,6 +5,7 @@
 #include "BattleManager.generated.h"
 
 class AWillieCharacter;
+class ABattlePokemon;
 class UCameraComponent;
 
 UCLASS()
@@ -23,6 +24,9 @@ protected:
 
 	UPROPERTY(EditInstanceOnly, Category = "Battle")
 	TObjectPtr<AWillieCharacter> Opponent;
+
+	UPROPERTY(EditInstanceOnly, Category = "Battle")
+	TArray<TObjectPtr<ABattlePokemon>> PlayerTeam;
 
 private:
 	UFUNCTION()
