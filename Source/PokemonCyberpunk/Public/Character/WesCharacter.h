@@ -7,7 +7,6 @@
 class UBlendSpace1D;
 class UCameraComponent;
 class UInputAction;
-class UInputMappingContext;
 class USpringArmComponent;
 struct FInputActionValue;
 
@@ -38,9 +37,6 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Animation")
 	TObjectPtr<UBlendSpace1D> Locomotion;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Input")
-	TObjectPtr<UInputMappingContext> PlayerMappingContext;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	TObjectPtr<UInputAction> MoveAction;

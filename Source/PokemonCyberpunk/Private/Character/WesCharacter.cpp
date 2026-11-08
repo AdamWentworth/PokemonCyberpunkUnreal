@@ -6,16 +6,13 @@
 #include "Camera/PlayerCameraManager.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/SkeletalMeshComponent.h"
-#include "Engine/LocalPlayer.h"
 #include "Engine/SkeletalMesh.h"
 #include "EnhancedInputComponent.h"
-#include "EnhancedInputSubsystems.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "InputAction.h"
 #include "InputActionValue.h"
-#include "InputMappingContext.h"
 #include "UObject/ConstructorHelpers.h"
 
 AWesCharacter::AWesCharacter()
@@ -49,8 +46,6 @@ AWesCharacter::AWesCharacter()
 
 	static ConstructorHelpers::FObjectFinder<UBlendSpace1D> MovementAnimation(TEXT("/Game/Characters/Wes/Animations/BS_Wes_Locomotion"));
 	Locomotion = MovementAnimation.Object;
-	static ConstructorHelpers::FObjectFinder<UInputMappingContext> Mapping(TEXT("/Game/Input/IMC_Player"));
-	PlayerMappingContext = Mapping.Object;
 	static ConstructorHelpers::FObjectFinder<UInputAction> MoveInput(TEXT("/Game/Input/IA_Move"));
 	MoveAction = MoveInput.Object;
 	static ConstructorHelpers::FObjectFinder<UInputAction> LookInput(TEXT("/Game/Input/IA_Look"));
@@ -77,13 +72,7 @@ void AWesCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 			Player->PlayerCameraManager->ViewPitchMin = -65.0f;
 			Player->PlayerCameraManager->ViewPitchMax = 20.0f;
 		}
-		if (ULocalPlayer* LocalPlayer = Player->GetLocalPlayer())
-		{
-			if (UEnhancedInputLocalPlayerSubsystem* Input = LocalPlayer->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>())
-			{
-				Input->AddMappingContext(PlayerMappingContext, 0);
-			}
-		}
+
 	}
 
 	UEnhancedInputComponent* Input = CastChecked<UEnhancedInputComponent>(PlayerInputComponent);
