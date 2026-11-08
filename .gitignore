@@ -9,8 +9,6 @@ Build/
 *.opensdf
 *.sdf
 *.slnx
-__pycache__/
-*.pyc
 .idea/
 .vscode/
 *.VC.db
