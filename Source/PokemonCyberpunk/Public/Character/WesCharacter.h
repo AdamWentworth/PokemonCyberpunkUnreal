@@ -7,6 +7,7 @@
 class UBlendSpace1D;
 class UCameraComponent;
 class UInputAction;
+class UPrimitiveComponent;
 class USpringArmComponent;
 struct FInputActionValue;
 
@@ -20,6 +21,11 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 
+	void PrepareForDialogue(AActor* Speaker);
+
+	UFUNCTION(BlueprintPure, Category = "Dialogue")
+	bool IsInDialogue() const;
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -28,6 +34,8 @@ private:
 	void Look(const FInputActionValue& Value);
 	void StartRunning();
 	void StopRunning();
+	void Interact();
+	UPrimitiveComponent* FindInteractionTarget() const;
 
 	UPROPERTY(VisibleAnywhere, Category = "Camera")
 	TObjectPtr<USpringArmComponent> CameraBoom;
@@ -46,6 +54,9 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	TObjectPtr<UInputAction> RunAction;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	TObjectPtr<UInputAction> InteractAction;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Movement")
 	float WalkSpeed = 180.0f;
