@@ -13,3 +13,12 @@ Build/
 .vscode/
 *.VC.db
 *.VC.opendb
+
+# Local macOS build and IDE outputs
+.DS_Store
+._*
+*.xcodeproj/
+*.xcworkspace/
+*.xcuserstate
+*.xcuserdatad/
+*.dSYM/
