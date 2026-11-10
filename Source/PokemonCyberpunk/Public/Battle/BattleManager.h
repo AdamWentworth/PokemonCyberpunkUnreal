@@ -9,6 +9,16 @@ class ABattlePokemon;
 class UCameraComponent;
 class ACharacter;
 class USceneComponent;
+class AGamePlayerController;
+
+UENUM(BlueprintType)
+enum class EBattlePhase : uint8
+{
+	Inactive,
+	ChoosingCommands,
+	ShowingTurnResult,
+	Finished
+};
 
 // A choice for one Pokemon. Selecting a command does not apply its damage yet.
 USTRUCT(BlueprintType)
@@ -47,10 +57,13 @@ public:
 	ABattlePokemon* GetSelectingPokemon() const;
 
 	bool IsSelectingTarget() const { return SelectedMoveIndex != INDEX_NONE; }
-	bool AreCommandsReady() const { return bSelectingCommands && SelectingPlayerIndex >= PlayerTeam.Num(); }
-	bool CanGoBack() const { return bSelectingCommands && (IsSelectingTarget() || SelectingPlayerIndex > 0); }
+	bool AreCommandsReady() const { return Phase == EBattlePhase::ChoosingCommands && SelectingPlayerIndex >= PlayerTeam.Num(); }
+	bool CanGoBack() const { return Phase == EBattlePhase::ChoosingCommands && (IsSelectingTarget() || !QueuedCommands.IsEmpty()); }
 	int32 GetSelectedMoveIndex() const { return SelectedMoveIndex; }
 	const TArray<TObjectPtr<ABattlePokemon>>& GetOpponentTeam() const { return OpponentTeam; }
+	EBattlePhase GetPhase() const { return Phase; }
+	bool HasPlayerWon() const { return bPlayerWon; }
+	const FText& GetTurnSummary() const { return TurnSummary; }
 
 	UFUNCTION(BlueprintPure, Category = "Battle")
 	const TArray<FBattleCommand>& GetQueuedCommands() const { return QueuedCommands; }
@@ -81,6 +94,12 @@ protected:
 
 private:
 	void PlaceTrainer(ACharacter* Trainer, const USceneComponent* Position);
+	void BeginTurn();
+	void SkipFaintedPokemon();
+	void ResolveTurn();
+	void ApplyAttack(ABattlePokemon* Attacker, ABattlePokemon* Target, int32 MoveIndex, TArray<FText>& Messages);
+	void ReturnToExploration();
+	ABattlePokemon* FindFirstActivePokemon(const TArray<TObjectPtr<ABattlePokemon>>& Team) const;
 
 	UFUNCTION()
 	void StartBattle(AWillieCharacter* Trainer);
@@ -88,7 +107,12 @@ private:
 	UPROPERTY(Transient)
 	TArray<FBattleCommand> QueuedCommands;
 
-	bool bSelectingCommands = false;
+	EBattlePhase Phase = EBattlePhase::Inactive;
 	int32 SelectingPlayerIndex = 0;
 	int32 SelectedMoveIndex = INDEX_NONE;
+	bool bPlayerWon = false;
+	FText TurnSummary;
+	FTransform PlayerExplorationTransform;
+	FTransform OpponentExplorationTransform;
+	TWeakObjectPtr<AGamePlayerController> BattlePlayer;
 };

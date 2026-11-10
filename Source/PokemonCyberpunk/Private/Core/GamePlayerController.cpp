@@ -104,6 +104,8 @@ void AGamePlayerController::BeginBattleView(AActor* BattleView)
 	{
 		return;
 	}
+	ExplorationViewTarget = GetViewTarget();
+	ExplorationControlRotation = GetControlRotation();
 	bInBattle = true;
 	if (APawn* PlayerPawn = GetPawn())
 	{
@@ -117,6 +119,33 @@ void AGamePlayerController::BeginBattleView(AActor* BattleView)
 	SetIgnoreMoveInput(true);
 	SetIgnoreLookInput(true);
 	SetViewTarget(BattleView);
+}
+
+void AGamePlayerController::EndBattleView()
+{
+	if (!bInBattle)
+	{
+		return;
+	}
+	bInBattle = false;
+	// Clear the battle screens so another encounter creates fresh cards and controls.
+	if (BattleCommandsUI)
+	{
+		BattleCommandsUI->RemoveFromParent();
+		BattleCommandsUI = nullptr;
+	}
+	if (BattleUI)
+	{
+		BattleUI->RemoveFromParent();
+		BattleUI = nullptr;
+	}
+	SetViewTarget(ExplorationViewTarget.IsValid() ? ExplorationViewTarget.Get() : GetPawn());
+	SetControlRotation(ExplorationControlRotation);
+	ExplorationViewTarget.Reset();
+	SetIgnoreMoveInput(false);
+	SetIgnoreLookInput(false);
+	SetShowMouseCursor(false);
+	UWidgetBlueprintLibrary::SetInputMode_GameOnly(this, true);
 }
 
 void AGamePlayerController::ShowBattleHUD(const TArray<TObjectPtr<ABattlePokemon>>& PlayerTeam,

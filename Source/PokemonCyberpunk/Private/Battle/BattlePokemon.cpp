@@ -51,3 +51,17 @@ void ABattlePokemon::SetHealth(int32 NewHealth)
 	CurrentHealth = ClampedHealth;
 	OnHealthChanged.Broadcast();
 }
+
+void ABattlePokemon::LeaveBattle()
+{
+	SetActorHiddenInGame(true);
+	Body->SetComponentTickEnabled(false);
+	SetActorTickEnabled(false);
+}
+
+void ABattlePokemon::KnockOut()
+{
+	SetHealth(0);
+	// For the basic battle loop, fainted Pokemon leave the field immediately.
+	LeaveBattle();
+}

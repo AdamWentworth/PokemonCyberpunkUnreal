@@ -25,6 +25,7 @@ public:
 	void RefreshDialogue();
 	void CloseDialogue();
 	void BeginBattleView(AActor* BattleView);
+	void EndBattleView();
 	void ShowBattleCommands(ABattleManager* Battle);
 	void ShowBattleHUD(const TArray<TObjectPtr<ABattlePokemon>>& PlayerTeam,
 		const TArray<TObjectPtr<ABattlePokemon>>& OpponentTeam);
@@ -69,6 +70,8 @@ private:
 	TObjectPtr<UBattleCommandsWidget> BattleCommandsUI;
 
 	TWeakObjectPtr<ADialogueCharacter> ActiveSpeaker;
+	TWeakObjectPtr<AActor> ExplorationViewTarget;
+	FRotator ExplorationControlRotation;
 	bool bInDialogue = false;
 	bool bInBattle = false;
 };

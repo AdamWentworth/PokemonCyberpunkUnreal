@@ -42,9 +42,24 @@ void UBattleCommandsWidget::RefreshOptions()
 	ABattlePokemon* Pokemon = Battle->GetSelectingPokemon();
 	TArray<FText> Options;
 	TArray<bool> Enabled;
-	if (Battle->AreCommandsReady())
+	const EBattlePhase Phase = Battle->GetPhase();
+	if (Phase == EBattlePhase::Finished)
+	{
+		PromptText->SetText(Battle->HasPlayerWon() ? LOCTEXT("Won", "You won!") : LOCTEXT("Lost", "You lost!"));
+		Options.Add(LOCTEXT("Return", "Return to exploration"));
+		Enabled.Add(true);
+	}
+	else if (Phase == EBattlePhase::ShowingTurnResult)
+	{
+		PromptText->SetText(LOCTEXT("TurnComplete", "Turn complete"));
+		Options.Add(LOCTEXT("NextTurn", "Next turn"));
+		Enabled.Add(true);
+	}
+	else if (Battle->AreCommandsReady())
 	{
 		PromptText->SetText(LOCTEXT("Ready", "Commands ready"));
+		Options.Add(LOCTEXT("PlayTurn", "Play turn"));
+		Enabled.Add(true);
 	}
 	else if (IsValid(Pokemon))
 	{
@@ -104,8 +119,10 @@ void UBattleCommandsWidget::RefreshOptions()
 				Command.Pokemon->GetMoveNames()[Command.MoveIndex], Command.Target->GetDisplayName()));
 		}
 	}
-	SelectionSummary->SetText(FText::Join(FText::FromString(TEXT("\n")), Choices));
-	SelectionSummary->SetVisibility(Choices.IsEmpty() ? ESlateVisibility::Collapsed : ESlateVisibility::HitTestInvisible);
+	const bool bShowingResult = Phase == EBattlePhase::ShowingTurnResult || Phase == EBattlePhase::Finished;
+	const FText Summary = bShowingResult ? Battle->GetTurnSummary() : FText::Join(FText::FromString(TEXT("\n")), Choices);
+	SelectionSummary->SetText(Summary);
+	SelectionSummary->SetVisibility(Summary.IsEmpty() ? ESlateVisibility::Collapsed : ESlateVisibility::HitTestInvisible);
 }
 
 void UBattleCommandsWidget::ChooseOption(int32 Index)

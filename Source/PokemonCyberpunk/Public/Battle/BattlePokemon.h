@@ -19,6 +19,8 @@ class POKEMONCYBERPUNK_API ABattlePokemon : public AActor
 public:
 	ABattlePokemon();
 	void EnterBattle();
+	void LeaveBattle();
+	void KnockOut();
 
 	const TArray<FText>& GetMoveNames() const { return MoveNames; }
 
