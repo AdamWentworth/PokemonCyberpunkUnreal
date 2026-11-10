@@ -29,6 +29,8 @@ ABattlePokemon::ABattlePokemon()
 void ABattlePokemon::BeginPlay()
 {
 	Super::BeginPlay();
+	MaxHealth = FMath::Max(1, MaxHealth);
+	CurrentHealth = MaxHealth;
 	SetActorHiddenInGame(true);
 	Body->SetComponentTickEnabled(false);
 	GemSparkle->SetVisibility(false);
@@ -42,10 +44,19 @@ void ABattlePokemon::BeginPlay()
 void ABattlePokemon::EnterBattle()
 {
 	if (!IsHidden()) return;
+	SetHealth(MaxHealth);
 	SetActorHiddenInGame(false);
 	Body->SetComponentTickEnabled(true);
 	Body->PlayAnimation(IdleAnimation, true);
 	SetActorTickEnabled(true);
+}
+
+void ABattlePokemon::SetHealth(int32 NewHealth)
+{
+	const int32 ClampedHealth = FMath::Clamp(NewHealth, 0, MaxHealth);
+	if (CurrentHealth == ClampedHealth) return;
+	CurrentHealth = ClampedHealth;
+	OnHealthChanged.Broadcast();
 }
 
 void ABattlePokemon::Tick(float DeltaSeconds)

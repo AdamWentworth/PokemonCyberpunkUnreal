@@ -7,6 +7,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "GameFramework/PawnMovementComponent.h"
 #include "UI/DialogueWidget.h"
+#include "UI/BattleHUDWidget.h"
 
 void AGamePlayerController::SetupInputComponent()
 {
@@ -89,11 +90,24 @@ void AGamePlayerController::BeginBattleView(AActor* BattleView)
 	SetViewTarget(BattleView);
 }
 
+void AGamePlayerController::ShowBattleHUD(const TArray<TObjectPtr<ABattlePokemon>>& PlayerTeam,
+	const TArray<TObjectPtr<ABattlePokemon>>& OpponentTeam)
+{
+	if (!bInBattle || !BattleHUDClass) return;
+	if (!BattleUI)
+	{
+		BattleUI = CreateWidget<UBattleHUDWidget>(this, BattleHUDClass);
+		BattleUI->AddToPlayerScreen();
+	}
+	BattleUI->ShowTeams(PlayerTeam, OpponentTeam);
+}
+
 void AGamePlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	if (ActiveSpeaker.IsValid()) ActiveSpeaker->CancelConversation();
 	CloseDialogue();
 	if (DialogueUI) DialogueUI->RemoveFromParent();
+	if (BattleUI) BattleUI->RemoveFromParent();
 	if (ULocalPlayer* LocalPlayer = GetLocalPlayer())
 	{
 		if (UEnhancedInputLocalPlayerSubsystem* Input = LocalPlayer->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>())

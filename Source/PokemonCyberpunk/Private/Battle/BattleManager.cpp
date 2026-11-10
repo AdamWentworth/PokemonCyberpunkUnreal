@@ -52,6 +52,7 @@ void ABattleManager::StartBattle(AWillieCharacter* Trainer)
 		{
 			if (IsValid(Pokemon)) Pokemon->EnterBattle();
 		}
+		Player->ShowBattleHUD(PlayerTeam, OpponentTeam);
 	}
 }
 

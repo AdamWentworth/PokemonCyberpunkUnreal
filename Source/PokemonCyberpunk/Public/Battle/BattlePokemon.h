@@ -9,6 +9,8 @@ class UMaterialInstanceDynamic;
 class USkeletalMeshComponent;
 class UStaticMeshComponent;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPokemonHealthChanged);
+
 UCLASS()
 class POKEMONCYBERPUNK_API ABattlePokemon : public AActor
 {
@@ -19,8 +21,29 @@ public:
 	void EnterBattle();
 	virtual void Tick(float DeltaSeconds) override;
 
+	UFUNCTION(BlueprintPure, Category = "Pokemon")
+	FText GetDisplayName() const { return DisplayName; }
+
+	UFUNCTION(BlueprintPure, Category = "Pokemon")
+	int32 GetHealth() const { return CurrentHealth; }
+
+	UFUNCTION(BlueprintPure, Category = "Pokemon")
+	int32 GetMaxHealth() const { return MaxHealth; }
+
+	UFUNCTION(BlueprintCallable, Category = "Pokemon")
+	void SetHealth(int32 NewHealth);
+
+	UPROPERTY(BlueprintAssignable, Category = "Pokemon")
+	FOnPokemonHealthChanged OnHealthChanged;
+
 protected:
 	virtual void BeginPlay() override;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Pokemon")
+	FText DisplayName;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Pokemon", meta = (ClampMin = "1"))
+	int32 MaxHealth = 1;
 
 	UPROPERTY(VisibleAnywhere, Category = "Pokemon")
 	TObjectPtr<USkeletalMeshComponent> Body;
@@ -48,6 +71,9 @@ protected:
 	FVector GemQuadOffset = FVector::ZeroVector;
 
 private:
+	UPROPERTY(Transient)
+	int32 CurrentHealth = 0;
+
 	UPROPERTY(Transient)
 	TObjectPtr<UMaterialInstanceDynamic> GlowMaterial;
 };
