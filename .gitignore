@@ -11,6 +11,7 @@ Build/
 *.slnx
 .idea/
 .vscode/
+.vsconfig
 *.VC.db
 *.VC.opendb
 
