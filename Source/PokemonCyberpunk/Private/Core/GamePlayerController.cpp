@@ -1,13 +1,13 @@
 #include "Core/GamePlayerController.h"
 
 #include "Blueprint/WidgetBlueprintLibrary.h"
-#include "Character/WesCharacter.h"
 #include "Character/DialogueCharacter.h"
+#include "Character/WesCharacter.h"
 #include "Engine/LocalPlayer.h"
 #include "EnhancedInputSubsystems.h"
 #include "GameFramework/PawnMovementComponent.h"
-#include "UI/DialogueWidget.h"
 #include "UI/BattleHUDWidget.h"
+#include "UI/DialogueWidget.h"
 
 void AGamePlayerController::SetupInputComponent()
 {
@@ -16,7 +16,10 @@ void AGamePlayerController::SetupInputComponent()
 	{
 		if (UEnhancedInputLocalPlayerSubsystem* Input = LocalPlayer->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>())
 		{
-			if (DefaultMappingContext) Input->AddMappingContext(DefaultMappingContext, 0);
+			if (DefaultMappingContext)
+			{
+				Input->AddMappingContext(DefaultMappingContext, 0);
+			}
 		}
 	}
 }
@@ -33,12 +36,18 @@ void AGamePlayerController::BeginPlay()
 
 void AGamePlayerController::ShowInteractionPrompt(const FText& Prompt)
 {
-	if (DialogueUI) DialogueUI->ShowPrompt(bInDialogue || bInBattle ? FText::GetEmpty() : Prompt);
+	if (DialogueUI)
+	{
+		DialogueUI->ShowPrompt(bInDialogue || bInBattle ? FText::GetEmpty() : Prompt);
+	}
 }
 
 bool AGamePlayerController::OpenDialogue(ADialogueCharacter* Speaker)
 {
-	if (bInDialogue || bInBattle || !DialogueUI || !IsValid(Speaker)) return false;
+	if (bInDialogue || bInBattle || !DialogueUI || !IsValid(Speaker))
+	{
+		return false;
+	}
 	ActiveSpeaker = Speaker;
 	bInDialogue = true;
 	if (AWesCharacter* Wes = Cast<AWesCharacter>(GetPawn()))
@@ -55,20 +64,32 @@ bool AGamePlayerController::OpenDialogue(ADialogueCharacter* Speaker)
 
 void AGamePlayerController::AdvanceDialogue()
 {
-	if (ActiveSpeaker.IsValid()) ActiveSpeaker->AdvanceDialogue();
+	if (ActiveSpeaker.IsValid())
+	{
+		ActiveSpeaker->AdvanceDialogue();
+	}
 }
 
 void AGamePlayerController::RefreshDialogue()
 {
-	if (DialogueUI) DialogueUI->RefreshConversation();
+	if (DialogueUI)
+	{
+		DialogueUI->RefreshConversation();
+	}
 }
 
 void AGamePlayerController::CloseDialogue()
 {
-	if (!bInDialogue) return;
+	if (!bInDialogue)
+	{
+		return;
+	}
 	bInDialogue = false;
 	ActiveSpeaker.Reset();
-	if (DialogueUI) DialogueUI->HideConversation();
+	if (DialogueUI)
+	{
+		DialogueUI->HideConversation();
+	}
 	SetIgnoreMoveInput(false);
 	SetIgnoreLookInput(false);
 	SetShowMouseCursor(false);
@@ -77,12 +98,18 @@ void AGamePlayerController::CloseDialogue()
 
 void AGamePlayerController::BeginBattleView(AActor* BattleView)
 {
-	if (bInDialogue || bInBattle || !IsValid(BattleView)) return;
+	if (bInDialogue || bInBattle || !IsValid(BattleView))
+	{
+		return;
+	}
 	bInBattle = true;
 	if (APawn* PlayerPawn = GetPawn())
 	{
 		PlayerPawn->ConsumeMovementInputVector();
-		if (UPawnMovementComponent* Movement = PlayerPawn->GetMovementComponent()) Movement->StopMovementImmediately();
+		if (UPawnMovementComponent* Movement = PlayerPawn->GetMovementComponent())
+		{
+			Movement->StopMovementImmediately();
+		}
 	}
 	ShowInteractionPrompt(FText::GetEmpty());
 	SetIgnoreMoveInput(true);
@@ -93,7 +120,10 @@ void AGamePlayerController::BeginBattleView(AActor* BattleView)
 void AGamePlayerController::ShowBattleHUD(const TArray<TObjectPtr<ABattlePokemon>>& PlayerTeam,
 	const TArray<TObjectPtr<ABattlePokemon>>& OpponentTeam)
 {
-	if (!bInBattle || !BattleHUDClass) return;
+	if (!bInBattle || !BattleHUDClass)
+	{
+		return;
+	}
 	if (!BattleUI)
 	{
 		BattleUI = CreateWidget<UBattleHUDWidget>(this, BattleHUDClass);
@@ -104,15 +134,27 @@ void AGamePlayerController::ShowBattleHUD(const TArray<TObjectPtr<ABattlePokemon
 
 void AGamePlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	if (ActiveSpeaker.IsValid()) ActiveSpeaker->CancelConversation();
+	if (ActiveSpeaker.IsValid())
+	{
+		ActiveSpeaker->CancelConversation();
+	}
 	CloseDialogue();
-	if (DialogueUI) DialogueUI->RemoveFromParent();
-	if (BattleUI) BattleUI->RemoveFromParent();
+	if (DialogueUI)
+	{
+		DialogueUI->RemoveFromParent();
+	}
+	if (BattleUI)
+	{
+		BattleUI->RemoveFromParent();
+	}
 	if (ULocalPlayer* LocalPlayer = GetLocalPlayer())
 	{
 		if (UEnhancedInputLocalPlayerSubsystem* Input = LocalPlayer->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>())
 		{
-			if (DefaultMappingContext) Input->RemoveMappingContext(DefaultMappingContext);
+			if (DefaultMappingContext)
+			{
+				Input->RemoveMappingContext(DefaultMappingContext);
+			}
 		}
 	}
 	Super::EndPlay(EndPlayReason);

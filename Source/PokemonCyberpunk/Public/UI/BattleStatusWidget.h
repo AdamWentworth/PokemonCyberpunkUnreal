@@ -28,6 +28,15 @@ protected:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UProgressBar> HealthBar;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Appearance")
+	FLinearColor HealthyColor = FLinearColor(0.12f, 0.8f, 0.38f);
+
+	UPROPERTY(EditDefaultsOnly, Category = "Appearance")
+	FLinearColor LowHealthColor = FLinearColor(1.0f, 0.65f, 0.12f);
+
+	UPROPERTY(EditDefaultsOnly, Category = "Appearance")
+	FLinearColor CriticalHealthColor = FLinearColor(0.95f, 0.16f, 0.12f);
+
 private:
 	UFUNCTION()
 	void RefreshHealth();

@@ -22,7 +22,10 @@ void UDialogueWidget::ShowPrompt(const FText& Prompt)
 {
 	const bool bVisible = !Prompt.IsEmpty() && !Speaker.IsValid();
 	TalkPrompt->SetVisibility(bVisible ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
-	if (bVisible) PromptText->SetText(FText::Format(LOCTEXT("InteractionPrompt", "E  -  {0}"), Prompt));
+	if (bVisible)
+	{
+		PromptText->SetText(FText::Format(LOCTEXT("InteractionPrompt", "E  -  {0}"), Prompt));
+	}
 }
 
 void UDialogueWidget::ShowConversation(ADialogueCharacter* Character)
@@ -101,8 +104,14 @@ FReply UDialogueWidget::NativeOnKeyDown(const FGeometry& Geometry, const FKeyEve
 	{
 		if (!KeyEvent.IsRepeat())
 		{
-			if (bChoosing) Speaker->ChooseResponse(bYesSelected);
-			else ContinueDialogue();
+			if (bChoosing)
+			{
+				Speaker->ChooseResponse(bYesSelected);
+			}
+			else
+			{
+				ContinueDialogue();
+			}
 		}
 		return FReply::Handled();
 	}
@@ -115,8 +124,14 @@ FReply UDialogueWidget::NativeOnKeyDown(const FGeometry& Geometry, const FKeyEve
 	{
 		if (!KeyEvent.IsRepeat())
 		{
-			if (bChoosing) ChooseNo();
-			else Speaker->CancelConversation();
+			if (bChoosing)
+			{
+				ChooseNo();
+			}
+			else
+			{
+				Speaker->CancelConversation();
+			}
 		}
 		return FReply::Handled();
 	}

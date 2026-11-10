@@ -26,10 +26,16 @@ public:
 		const TArray<TObjectPtr<ABattlePokemon>>& OpponentTeam);
 
 	UFUNCTION(BlueprintPure, Category = "Dialogue")
-	bool IsInDialogue() const { return bInDialogue; }
+	bool IsInDialogue() const
+	{
+		return bInDialogue;
+	}
 
 	UFUNCTION(BlueprintPure, Category = "Battle")
-	bool IsInBattle() const { return bInBattle; }
+	bool IsInBattle() const
+	{
+		return bInBattle;
+	}
 
 protected:
 	virtual void BeginPlay() override;

@@ -8,7 +8,6 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "Core/GamePlayerController.h"
 #include "Engine/OverlapResult.h"
-#include "Engine/SkeletalMesh.h"
 #include "EnhancedInputComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/PlayerController.h"
@@ -16,7 +15,6 @@
 #include "InputAction.h"
 #include "InputActionValue.h"
 #include "Interactable/Interactable.h"
-#include "UObject/ConstructorHelpers.h"
 
 AWesCharacter::AWesCharacter()
 {
@@ -30,8 +28,6 @@ AWesCharacter::AWesCharacter()
 	GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
 	GetCharacterMovement()->BrakingDecelerationWalking = 1200.0f;
 
-	static ConstructorHelpers::FObjectFinder<USkeletalMesh> WesMesh(TEXT("/Game/Characters/Wes/SK_Wes"));
-	GetMesh()->SetSkeletalMeshAsset(WesMesh.Object);
 	GetMesh()->SetRelativeLocation(FVector(0.0f, 0.0f, -87.2f));
 	GetMesh()->SetRelativeRotation(FRotator(0.0f, -90.0f, 0.0f));
 	GetMesh()->SetCollisionProfileName(TEXT("NoCollision"));
@@ -46,17 +42,6 @@ AWesCharacter::AWesCharacter()
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	FollowCamera->bUsePawnControlRotation = false;
-
-	static ConstructorHelpers::FObjectFinder<UBlendSpace1D> MovementAnimation(TEXT("/Game/Characters/Wes/Animations/BS_Wes_Locomotion"));
-	Locomotion = MovementAnimation.Object;
-	static ConstructorHelpers::FObjectFinder<UInputAction> MoveInput(TEXT("/Game/Input/IA_Move"));
-	MoveAction = MoveInput.Object;
-	static ConstructorHelpers::FObjectFinder<UInputAction> LookInput(TEXT("/Game/Input/IA_Look"));
-	LookAction = LookInput.Object;
-	static ConstructorHelpers::FObjectFinder<UInputAction> RunInput(TEXT("/Game/Input/IA_Run"));
-	RunAction = RunInput.Object;
-	static ConstructorHelpers::FObjectFinder<UInputAction> InteractInput(TEXT("/Game/Input/IA_Interact"));
-	InteractAction = InteractInput.Object;
 }
 
 void AWesCharacter::BeginPlay()
@@ -69,13 +54,13 @@ void AWesCharacter::BeginPlay()
 void AWesCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
-	if (APlayerController* Player = Cast<APlayerController>(GetController()))
+	if (APlayerController* PlayerController = Cast<APlayerController>(GetController()))
 	{
-		Player->SetControlRotation(FRotator(-15.0f, GetActorRotation().Yaw, 0.0f));
-		if (Player->PlayerCameraManager)
+		PlayerController->SetControlRotation(FRotator(-15.0f, GetActorRotation().Yaw, 0.0f));
+		if (PlayerController->PlayerCameraManager)
 		{
-			Player->PlayerCameraManager->ViewPitchMin = -65.0f;
-			Player->PlayerCameraManager->ViewPitchMax = 20.0f;
+			PlayerController->PlayerCameraManager->ViewPitchMin = -65.0f;
+			PlayerController->PlayerCameraManager->ViewPitchMax = 20.0f;
 		}
 	}
 
@@ -102,7 +87,10 @@ void AWesCharacter::Move(const FInputActionValue& Value)
 
 void AWesCharacter::Look(const FInputActionValue& Value)
 {
-	if (!Controller || Controller->IsLookInputIgnored()) return;
+	if (!Controller || Controller->IsLookInputIgnored())
+	{
+		return;
+	}
 	const FVector2D Direction = Value.Get<FVector2D>();
 	AddControllerYawInput(Direction.X);
 	AddControllerPitchInput(Direction.Y);
@@ -110,7 +98,10 @@ void AWesCharacter::Look(const FInputActionValue& Value)
 
 void AWesCharacter::StartRunning()
 {
-	if (!Controller || Controller->IsMoveInputIgnored()) return;
+	if (!Controller || Controller->IsMoveInputIgnored())
+	{
+		return;
+	}
 	GetCharacterMovement()->MaxWalkSpeed = RunSpeed;
 }
 
@@ -126,51 +117,61 @@ void AWesCharacter::Tick(float DeltaTime)
 	{
 		Animation->SetBlendSpacePosition(FVector(GetVelocity().Size2D(), 0.0f, 0.0f));
 	}
-	if (AGamePlayerController* Player = Cast<AGamePlayerController>(GetController()))
+	if (AGamePlayerController* PlayerController = Cast<AGamePlayerController>(GetController()))
 	{
-		UPrimitiveComponent* Target = Player->IsInDialogue() || Player->IsInBattle() ? nullptr : FindInteractionTarget();
+		const bool bCanInteract = !PlayerController->IsInDialogue() && !PlayerController->IsInBattle();
+		UPrimitiveComponent* Target = bCanInteract ? FindInteractionTarget() : nullptr;
 		IInteractable* Interactable = Target ? Cast<IInteractable>(Target->GetOwner()) : nullptr;
-		Player->ShowInteractionPrompt(Interactable ? Interactable->GetInteractionPrompt() : FText::GetEmpty());
+		PlayerController->ShowInteractionPrompt(Interactable ? Interactable->GetInteractionPrompt() : FText::GetEmpty());
 	}
 }
 
 UPrimitiveComponent* AWesCharacter::FindInteractionTarget() const
 {
 	const float InteractionDistance = 220.0f;
-	TArray<FOverlapResult> Nearby;
+	TArray<FOverlapResult> NearbyOverlaps;
 	FCollisionQueryParams Query(SCENE_QUERY_STAT(Interaction), false, this);
-	GetWorld()->OverlapMultiByObjectType(Nearby, GetActorLocation(), FQuat::Identity,
+	GetWorld()->OverlapMultiByObjectType(NearbyOverlaps, GetActorLocation(), FQuat::Identity,
 		FCollisionObjectQueryParams::AllDynamicObjects, FCollisionShape::MakeSphere(InteractionDistance), Query);
 
-	UPrimitiveComponent* Nearest = nullptr;
-	float NearestDistance = FMath::Square(InteractionDistance);
-	const FVector HeadHeight(0.0f, 0.0f, 40.0f);
-	for (const FOverlapResult& Result : Nearby)
+	UPrimitiveComponent* NearestComponent = nullptr;
+	float NearestDistanceSquared = FMath::Square(InteractionDistance);
+	const FVector TraceHeightOffset(0.0f, 0.0f, 40.0f);
+	for (const FOverlapResult& Result : NearbyOverlaps)
 	{
 		AActor* Target = Result.GetActor();
-		if (!IsValid(Target) || !Cast<IInteractable>(Target)) continue;
-		const float Distance = FVector::DistSquared(GetActorLocation(), Target->GetActorLocation());
-		if (Distance > NearestDistance) continue;
+		if (!IsValid(Target) || !Cast<IInteractable>(Target))
+		{
+			continue;
+		}
+		const float DistanceSquared = FVector::DistSquared(GetActorLocation(), Target->GetActorLocation());
+		if (DistanceSquared > NearestDistanceSquared)
+		{
+			continue;
+		}
 
 		FCollisionQueryParams VisibilityQuery = Query;
 		VisibilityQuery.AddIgnoredActor(Target);
-		if (!GetWorld()->LineTraceTestByChannel(GetActorLocation() + HeadHeight,
-			Target->GetActorLocation() + HeadHeight, ECC_Visibility, VisibilityQuery))
+		if (!GetWorld()->LineTraceTestByChannel(GetActorLocation() + TraceHeightOffset,
+			Target->GetActorLocation() + TraceHeightOffset, ECC_Visibility, VisibilityQuery))
 		{
-			Nearest = Result.GetComponent();
-			NearestDistance = Distance;
+			NearestComponent = Result.GetComponent();
+			NearestDistanceSquared = DistanceSquared;
 		}
 	}
-	return Nearest;
+	return NearestComponent;
 }
 
 void AWesCharacter::Interact()
 {
-	AGamePlayerController* Player = Cast<AGamePlayerController>(GetController());
-	if (!Player || Player->IsInBattle()) return;
-	if (Player->IsInDialogue())
+	AGamePlayerController* PlayerController = Cast<AGamePlayerController>(GetController());
+	if (!PlayerController || PlayerController->IsInBattle())
 	{
-		Player->AdvanceDialogue();
+		return;
+	}
+	if (PlayerController->IsInDialogue())
+	{
+		PlayerController->AdvanceDialogue();
 	}
 	else if (UPrimitiveComponent* Target = FindInteractionTarget())
 	{
@@ -188,6 +189,6 @@ void AWesCharacter::PrepareForDialogue(AActor* Speaker)
 
 bool AWesCharacter::IsInDialogue() const
 {
-	const AGamePlayerController* Player = Cast<AGamePlayerController>(GetController());
-	return Player && Player->IsInDialogue();
+	const AGamePlayerController* PlayerController = Cast<AGamePlayerController>(GetController());
+	return PlayerController && PlayerController->IsInDialogue();
 }

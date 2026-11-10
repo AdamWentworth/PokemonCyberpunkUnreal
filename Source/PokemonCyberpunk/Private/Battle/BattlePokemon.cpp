@@ -37,13 +37,19 @@ void ABattlePokemon::BeginPlay()
 	if (!GlowMaterialSlot.IsNone())
 	{
 		const int32 Slot = Body->GetMaterialIndex(GlowMaterialSlot);
-		if (Slot != INDEX_NONE) GlowMaterial = Body->CreateDynamicMaterialInstance(Slot);
+		if (Slot != INDEX_NONE)
+		{
+			GlowMaterial = Body->CreateDynamicMaterialInstance(Slot);
+		}
 	}
 }
 
 void ABattlePokemon::EnterBattle()
 {
-	if (!IsHidden()) return;
+	if (!IsHidden())
+	{
+		return;
+	}
 	SetHealth(MaxHealth);
 	SetActorHiddenInGame(false);
 	Body->SetComponentTickEnabled(true);
@@ -54,7 +60,10 @@ void ABattlePokemon::EnterBattle()
 void ABattlePokemon::SetHealth(int32 NewHealth)
 {
 	const int32 ClampedHealth = FMath::Clamp(NewHealth, 0, MaxHealth);
-	if (CurrentHealth == ClampedHealth) return;
+	if (CurrentHealth == ClampedHealth)
+	{
+		return;
+	}
 	CurrentHealth = ClampedHealth;
 	OnHealthChanged.Broadcast();
 }
@@ -63,32 +72,62 @@ void ABattlePokemon::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 	const UAnimInstance* Animation = Body->GetAnimInstance();
-	if (!Animation) return;
-	if (GlowMaterial)
+	if (!Animation)
 	{
-		GlowMaterial->SetVectorParameterValue(TEXT("GlowColor"), FLinearColor(
-			Animation->GetCurveValue(TEXT("RingGlowR")),
-			Animation->GetCurveValue(TEXT("RingGlowG")),
-			Animation->GetCurveValue(TEXT("RingGlowB"))));
+		return;
 	}
 
-	const float SparkleScale = Animation->GetCurveValue(TEXT("GemScale"));
-	const APlayerCameraManager* Camera = UGameplayStatics::GetPlayerCameraManager(this, 0);
-	const bool bShowSparkle = !GemBone.IsNone() && SparkleScale > 0.0003f && Camera;
-	GemSparkle->SetVisibility(bShowSparkle);
-	if (!bShowSparkle) return;
+	UpdateRingGlow(*Animation);
+	UpdateGemSparkle(*Animation);
+}
 
-	const FTransform Head = Body->GetSocketTransform(GemBone);
-	const FVector Offset(Animation->GetCurveValue(TEXT("GemOffsetX")),
-		Animation->GetCurveValue(TEXT("GemOffsetY")), Animation->GetCurveValue(TEXT("GemOffsetZ")));
-	const FVector Forward = -Camera->GetCameraRotation().Vector();
-	FVector Right = FVector::CrossProduct(Head.TransformVectorNoScale(GemUp), Forward).GetSafeNormal();
-	if (Right.IsNearlyZero()) Right = Camera->GetActorRightVector();
-	const FVector Up = FVector::CrossProduct(Forward, Right).GetSafeNormal();
-	const float Scale = SparkleScale * Body->GetComponentScale().GetAbs().X;
-	const FVector Center = Head.TransformPosition(Offset) + Scale *
-		(Right * GemQuadOffset.X + Up * GemQuadOffset.Y + Forward * GemQuadOffset.Z);
-	GemSparkle->SetWorldLocationAndRotation(Center, FRotationMatrix::MakeFromXZ(Right, Forward).ToQuat());
-	// The shared plane is one metre wide; the imported attachment sizes are centimetres.
-	GemSparkle->SetWorldScale3D(FVector(GemSize.X * Scale / 100, GemSize.Y * Scale / 100, 1));
+void ABattlePokemon::UpdateRingGlow(const UAnimInstance& Animation)
+{
+	if (!GlowMaterial)
+	{
+		return;
+	}
+
+	const FLinearColor GlowColor(
+		Animation.GetCurveValue(TEXT("RingGlowR")),
+		Animation.GetCurveValue(TEXT("RingGlowG")),
+		Animation.GetCurveValue(TEXT("RingGlowB")));
+	GlowMaterial->SetVectorParameterValue(TEXT("GlowColor"), GlowColor);
+}
+
+void ABattlePokemon::UpdateGemSparkle(const UAnimInstance& Animation)
+{
+	constexpr float MinimumSparkleScale = 0.0003f;
+	const float SparkleScale = Animation.GetCurveValue(TEXT("GemScale"));
+	const APlayerCameraManager* Camera = UGameplayStatics::GetPlayerCameraManager(this, 0);
+	const bool bShowSparkle = !GemBone.IsNone() && SparkleScale > MinimumSparkleScale && Camera;
+	GemSparkle->SetVisibility(bShowSparkle);
+	if (!bShowSparkle)
+	{
+		return;
+	}
+
+	// The animation offset is local to the gem bone. The quad faces the camera,
+	// with its up direction following that bone's orientation.
+	const FTransform GemTransform = Body->GetSocketTransform(GemBone);
+	const FVector AnimationOffset(Animation.GetCurveValue(TEXT("GemOffsetX")),
+		Animation.GetCurveValue(TEXT("GemOffsetY")), Animation.GetCurveValue(TEXT("GemOffsetZ")));
+	const FVector BillboardForward = -Camera->GetCameraRotation().Vector();
+	FVector BillboardRight = FVector::CrossProduct(
+		GemTransform.TransformVectorNoScale(GemUp), BillboardForward).GetSafeNormal();
+	if (BillboardRight.IsNearlyZero())
+	{
+		BillboardRight = Camera->GetActorRightVector();
+	}
+	const FVector BillboardUp = FVector::CrossProduct(BillboardForward, BillboardRight).GetSafeNormal();
+	const float WorldSparkleScale = SparkleScale * Body->GetComponentScale().GetAbs().X;
+	const FVector SparkleLocation = GemTransform.TransformPosition(AnimationOffset) + WorldSparkleScale *
+		(BillboardRight * GemQuadOffset.X + BillboardUp * GemQuadOffset.Y + BillboardForward * GemQuadOffset.Z);
+	GemSparkle->SetWorldLocationAndRotation(SparkleLocation,
+		FRotationMatrix::MakeFromXZ(BillboardRight, BillboardForward).ToQuat());
+
+	// Convert the imported centimetre sizes to scale factors for the one-metre plane.
+	constexpr float PlaneWidthCm = 100.0f;
+	GemSparkle->SetWorldScale3D(FVector(GemSize.X * WorldSparkleScale / PlaneWidthCm,
+		GemSize.Y * WorldSparkleScale / PlaneWidthCm, 1.0f));
 }

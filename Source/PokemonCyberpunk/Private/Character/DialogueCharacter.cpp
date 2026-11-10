@@ -24,7 +24,10 @@ void ADialogueCharacter::BeginConversation(APawn* Player)
 		return;
 	}
 	AGamePlayerController* PlayerController = Cast<AGamePlayerController>(Player->GetController());
-	if (!PlayerController || PlayerController->IsInDialogue()) return;
+	if (!PlayerController || PlayerController->IsInDialogue())
+	{
+		return;
+	}
 
 	TalkingPlayer = PlayerController;
 	RestingRotation = GetActorRotation();
@@ -32,28 +35,48 @@ void ADialogueCharacter::BeginConversation(APawn* Player)
 	SetActorRotation(FRotator(0.0f, ToPlayer.Rotation().Yaw, 0.0f));
 	PageIndex = 0;
 	DialogueStage = Introduction.IsEmpty() ? EDialogueStage::Choice : EDialogueStage::Introduction;
-	if (!PlayerController->OpenDialogue(this)) FinishConversation(EDialogueResult::Cancelled);
+	if (!PlayerController->OpenDialogue(this))
+	{
+		FinishConversation(EDialogueResult::Cancelled);
+	}
 }
 
 const TArray<FText>& ADialogueCharacter::GetCurrentPages() const
 {
-	if (DialogueStage == EDialogueStage::Accepted) return YesResponse;
-	if (DialogueStage == EDialogueStage::Declined) return NoResponse;
+	if (DialogueStage == EDialogueStage::Accepted)
+	{
+		return YesResponse;
+	}
+	if (DialogueStage == EDialogueStage::Declined)
+	{
+		return NoResponse;
+	}
 	return Introduction;
 }
 
 FText ADialogueCharacter::GetCurrentLine() const
 {
-	if (DialogueStage == EDialogueStage::Closed) return FText::GetEmpty();
-	if (DialogueStage == EDialogueStage::Choice) return Question;
+	if (DialogueStage == EDialogueStage::Closed)
+	{
+		return FText::GetEmpty();
+	}
+	if (DialogueStage == EDialogueStage::Choice)
+	{
+		return Question;
+	}
 	const TArray<FText>& Pages = GetCurrentPages();
 	return Pages.IsValidIndex(PageIndex) ? Pages[PageIndex] : FText::GetEmpty();
 }
 
 void ADialogueCharacter::AdvanceDialogue()
 {
-	if (!TalkingPlayer.IsValid() || DialogueStage == EDialogueStage::Closed || IsChoosingResponse()) return;
-	if (++PageIndex >= GetCurrentPages().Num())
+	if (!TalkingPlayer.IsValid() || DialogueStage == EDialogueStage::Closed || IsChoosingResponse())
+	{
+		return;
+	}
+
+	++PageIndex;
+	if (PageIndex >= GetCurrentPages().Num())
 	{
 		if (DialogueStage == EDialogueStage::Introduction)
 		{
@@ -67,7 +90,9 @@ void ADialogueCharacter::AdvanceDialogue()
 		}
 		else
 		{
-			FinishConversation(DialogueStage == EDialogueStage::Accepted ? EDialogueResult::Accepted : EDialogueResult::Declined);
+			const EDialogueResult Result = DialogueStage == EDialogueStage::Accepted
+				? EDialogueResult::Accepted : EDialogueResult::Declined;
+			FinishConversation(Result);
 			return;
 		}
 	}
@@ -76,7 +101,10 @@ void ADialogueCharacter::AdvanceDialogue()
 
 void ADialogueCharacter::ChooseResponse(bool bYes)
 {
-	if (!IsChoosingResponse() || !TalkingPlayer.IsValid()) return;
+	if (!IsChoosingResponse() || !TalkingPlayer.IsValid())
+	{
+		return;
+	}
 	DialogueStage = bYes ? EDialogueStage::Accepted : EDialogueStage::Declined;
 	PageIndex = 0;
 	if (GetCurrentPages().IsEmpty())
@@ -94,10 +122,16 @@ void ADialogueCharacter::CancelConversation()
 
 void ADialogueCharacter::FinishConversation(EDialogueResult Result)
 {
-	if (DialogueStage == EDialogueStage::Closed) return;
+	if (DialogueStage == EDialogueStage::Closed)
+	{
+		return;
+	}
 	DialogueStage = EDialogueStage::Closed;
 	SetActorRotation(RestingRotation);
-	if (TalkingPlayer.IsValid()) TalkingPlayer->CloseDialogue();
+	if (TalkingPlayer.IsValid())
+	{
+		TalkingPlayer->CloseDialogue();
+	}
 	TalkingPlayer.Reset();
 	OnDialogueFinished.Broadcast(this, Result);
 }

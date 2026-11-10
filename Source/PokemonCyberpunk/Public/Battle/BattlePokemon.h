@@ -4,6 +4,7 @@
 #include "GameFramework/Actor.h"
 #include "BattlePokemon.generated.h"
 
+class UAnimInstance;
 class UAnimSequence;
 class UMaterialInstanceDynamic;
 class USkeletalMeshComponent;
@@ -22,13 +23,22 @@ public:
 	virtual void Tick(float DeltaSeconds) override;
 
 	UFUNCTION(BlueprintPure, Category = "Pokemon")
-	FText GetDisplayName() const { return DisplayName; }
+	FText GetDisplayName() const
+	{
+		return DisplayName;
+	}
 
 	UFUNCTION(BlueprintPure, Category = "Pokemon")
-	int32 GetHealth() const { return CurrentHealth; }
+	int32 GetHealth() const
+	{
+		return CurrentHealth;
+	}
 
 	UFUNCTION(BlueprintPure, Category = "Pokemon")
-	int32 GetMaxHealth() const { return MaxHealth; }
+	int32 GetMaxHealth() const
+	{
+		return MaxHealth;
+	}
 
 	UFUNCTION(BlueprintCallable, Category = "Pokemon")
 	void SetHealth(int32 NewHealth);
@@ -71,6 +81,9 @@ protected:
 	FVector GemQuadOffset = FVector::ZeroVector;
 
 private:
+	void UpdateRingGlow(const UAnimInstance& Animation);
+	void UpdateGemSparkle(const UAnimInstance& Animation);
+
 	UPROPERTY(Transient)
 	int32 CurrentHealth = 0;
 

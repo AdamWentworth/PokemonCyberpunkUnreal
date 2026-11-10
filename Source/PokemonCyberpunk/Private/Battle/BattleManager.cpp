@@ -1,10 +1,10 @@
 #include "Battle/BattleManager.h"
-#include "Battle/BattlePokemon.h"
 
+#include "Battle/BattlePokemon.h"
 #include "Camera/CameraComponent.h"
 #include "Character/WillieCharacter.h"
-#include "Components/SceneComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "Components/SceneComponent.h"
 #include "Core/GamePlayerController.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -16,13 +16,15 @@ ABattleManager::ABattleManager()
 	BattleCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("BattleCamera"));
 	BattleCamera->SetupAttachment(RootComponent);
 	BattleCamera->SetFieldOfView(65.0f);
+
+	constexpr float TrainerDistanceFromCenter = 568.75f;
 	PlayerTrainerPosition = CreateDefaultSubobject<USceneComponent>(TEXT("PlayerTrainerPosition"));
 	PlayerTrainerPosition->SetupAttachment(RootComponent);
-	PlayerTrainerPosition->SetRelativeLocation(FVector(0, -568.75f, 0));
+	PlayerTrainerPosition->SetRelativeLocation(FVector(0, -TrainerDistanceFromCenter, 0));
 	PlayerTrainerPosition->SetRelativeRotation(FRotator(0, 90, 0));
 	OpponentTrainerPosition = CreateDefaultSubobject<USceneComponent>(TEXT("OpponentTrainerPosition"));
 	OpponentTrainerPosition->SetupAttachment(RootComponent);
-	OpponentTrainerPosition->SetRelativeLocation(FVector(0, 568.75f, 0));
+	OpponentTrainerPosition->SetRelativeLocation(FVector(0, TrainerDistanceFromCenter, 0));
 	OpponentTrainerPosition->SetRelativeRotation(FRotator(0, -90, 0));
 }
 
@@ -37,31 +39,46 @@ void ABattleManager::BeginPlay()
 
 void ABattleManager::StartBattle(AWillieCharacter* Trainer)
 {
-	if (!IsValid(Trainer) || Trainer != Opponent) return;
-	if (AGamePlayerController* Player = Cast<AGamePlayerController>(UGameplayStatics::GetPlayerController(this, 0)))
+	if (!IsValid(Trainer) || Trainer != Opponent)
 	{
-		if (Player->IsInBattle() || Player->IsInDialogue()) return;
-		Player->BeginBattleView(this);
-		PlaceTrainer(Cast<ACharacter>(Player->GetPawn()), PlayerTrainerPosition);
+		return;
+	}
+	if (AGamePlayerController* PlayerController = Cast<AGamePlayerController>(UGameplayStatics::GetPlayerController(this, 0)))
+	{
+		if (PlayerController->IsInBattle() || PlayerController->IsInDialogue())
+		{
+			return;
+		}
+		PlayerController->BeginBattleView(this);
+		PlaceTrainer(Cast<ACharacter>(PlayerController->GetPawn()), PlayerTrainerPosition);
 		PlaceTrainer(Trainer, OpponentTrainerPosition);
 		for (ABattlePokemon* Pokemon : PlayerTeam)
 		{
-			if (IsValid(Pokemon)) Pokemon->EnterBattle();
+			if (IsValid(Pokemon))
+			{
+				Pokemon->EnterBattle();
+			}
 		}
 		for (ABattlePokemon* Pokemon : OpponentTeam)
 		{
-			if (IsValid(Pokemon)) Pokemon->EnterBattle();
+			if (IsValid(Pokemon))
+			{
+				Pokemon->EnterBattle();
+			}
 		}
-		Player->ShowBattleHUD(PlayerTeam, OpponentTeam);
+		PlayerController->ShowBattleHUD(PlayerTeam, OpponentTeam);
 	}
 }
 
 void ABattleManager::PlaceTrainer(ACharacter* Trainer, const USceneComponent* Position)
 {
-	if (!IsValid(Trainer)) return;
+	if (!IsValid(Trainer))
+	{
+		return;
+	}
 	Trainer->GetCharacterMovement()->StopMovementImmediately();
 	// Formation markers sit on the ground; a character's origin is its capsule center.
-	const FVector Height(0, 0, Trainer->GetCapsuleComponent()->GetScaledCapsuleHalfHeight());
-	Trainer->SetActorLocationAndRotation(Position->GetComponentLocation() + Height,
+	const FVector CapsuleOffset(0, 0, Trainer->GetCapsuleComponent()->GetScaledCapsuleHalfHeight());
+	Trainer->SetActorLocationAndRotation(Position->GetComponentLocation() + CapsuleOffset,
 		Position->GetComponentRotation(), false, nullptr, ETeleportType::TeleportPhysics);
 }

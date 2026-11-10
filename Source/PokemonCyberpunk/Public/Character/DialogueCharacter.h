@@ -55,10 +55,16 @@ public:
 	FText GetCurrentLine() const;
 
 	UFUNCTION(BlueprintPure, Category = "Dialogue")
-	FText GetSpeakerName() const { return DisplayName; }
+	FText GetSpeakerName() const
+	{
+		return DisplayName;
+	}
 
 	UFUNCTION(BlueprintPure, Category = "Dialogue")
-	bool IsChoosingResponse() const { return DialogueStage == EDialogueStage::Choice; }
+	bool IsChoosingResponse() const
+	{
+		return DialogueStage == EDialogueStage::Choice;
+	}
 
 	UPROPERTY(BlueprintReadOnly, Category = "Dialogue")
 	EDialogueStage DialogueStage = EDialogueStage::Closed;
