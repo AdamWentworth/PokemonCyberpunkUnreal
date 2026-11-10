@@ -8,6 +8,7 @@
 class ADialogueCharacter;
 class AGamePlayerController;
 
+// Tracks which part of the conversation is currently on screen.
 UENUM(BlueprintType)
 enum class EDialogueStage : uint8
 {
@@ -29,6 +30,7 @@ enum class EDialogueResult : uint8
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FDialogueFinished, ADialogueCharacter*, Speaker, EDialogueResult, Result);
 
+// Shared conversation behavior. Each NPC Blueprint supplies its own name and dialogue text.
 UCLASS()
 class POKEMONCYBERPUNK_API ADialogueCharacter : public ACharacter, public IInteractable
 {
@@ -95,6 +97,7 @@ private:
 	const TArray<FText>& GetCurrentPages() const;
 	void FinishConversation(EDialogueResult Result);
 
+	// A weak reference becomes invalid if the player disappears; it does not keep the player alive.
 	TWeakObjectPtr<AGamePlayerController> TalkingPlayer;
 	FRotator RestingRotation;
 	int32 PageIndex = 0;

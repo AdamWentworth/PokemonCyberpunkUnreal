@@ -6,6 +6,7 @@
 
 void UBattleStatusWidget::SetPokemon(ABattlePokemon* InPokemon)
 {
+	// Stop listening to the previous Pokemon before showing a different one.
 	if (Pokemon.IsValid())
 	{
 		Pokemon->OnHealthChanged.RemoveDynamic(this, &UBattleStatusWidget::RefreshHealth);
@@ -20,6 +21,7 @@ void UBattleStatusWidget::SetPokemon(ABattlePokemon* InPokemon)
 
 void UBattleStatusWidget::RefreshHealth()
 {
+	// Read the Pokemon's actual health; the UI does not keep a separate health total.
 	SetVisibility(Pokemon.IsValid() ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
 	if (!Pokemon.IsValid())
 	{

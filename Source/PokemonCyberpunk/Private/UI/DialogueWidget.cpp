@@ -102,6 +102,7 @@ FReply UDialogueWidget::NativeOnKeyDown(const FGeometry& Geometry, const FKeyEve
 	const bool bChoosing = Speaker->IsChoosingResponse();
 	if (Key == EKeys::E || Key == EKeys::Enter || Key == EKeys::SpaceBar)
 	{
+		// Holding the key should not skip several dialogue pages or confirm a choice repeatedly.
 		if (!KeyEvent.IsRepeat())
 		{
 			if (bChoosing)

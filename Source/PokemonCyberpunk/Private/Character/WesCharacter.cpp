@@ -80,6 +80,7 @@ void AWesCharacter::Move(const FInputActionValue& Value)
 		return;
 	}
 	const FVector2D Direction = Value.Get<FVector2D>();
+	// Forward on the controls means forward from the camera, not from Wes's current facing.
 	const FRotator CameraYaw(0.0f, Controller->GetControlRotation().Yaw, 0.0f);
 	AddMovementInput(FRotationMatrix(CameraYaw).GetUnitAxis(EAxis::X), Direction.Y);
 	AddMovementInput(FRotationMatrix(CameraYaw).GetUnitAxis(EAxis::Y), Direction.X);
@@ -115,6 +116,7 @@ void AWesCharacter::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 	if (UAnimSingleNodeInstance* Animation = GetMesh()->GetSingleNodeInstance())
 	{
+		// Speed chooses the blend between the idle, walking and running animations.
 		Animation->SetBlendSpacePosition(FVector(GetVelocity().Size2D(), 0.0f, 0.0f));
 	}
 	if (AGamePlayerController* PlayerController = Cast<AGamePlayerController>(GetController()))
@@ -128,6 +130,7 @@ void AWesCharacter::Tick(float DeltaTime)
 
 UPrimitiveComponent* AWesCharacter::FindInteractionTarget() const
 {
+	// Pick the nearest interactable in reach. Ignore anyone hidden behind a wall.
 	const float InteractionDistance = 220.0f;
 	TArray<FOverlapResult> NearbyOverlaps;
 	FCollisionQueryParams Query(SCENE_QUERY_STAT(Interaction), false, this);
@@ -181,6 +184,7 @@ void AWesCharacter::Interact()
 
 void AWesCharacter::PrepareForDialogue(AActor* Speaker)
 {
+	// Stop leftover movement before turning toward the person being spoken to.
 	StopRunning();
 	GetCharacterMovement()->StopMovementImmediately();
 	const FVector ToSpeaker = Speaker->GetActorLocation() - GetActorLocation();

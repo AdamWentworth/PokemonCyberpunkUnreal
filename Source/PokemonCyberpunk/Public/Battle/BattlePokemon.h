@@ -9,6 +9,8 @@ class USkeletalMeshComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPokemonHealthChanged);
 
+// One Pokemon in the battle: its model, available moves and current health.
+// Species-specific appearance is configured in its Blueprint and materials.
 UCLASS()
 class POKEMONCYBERPUNK_API ABattlePokemon : public AActor
 {
@@ -17,6 +19,8 @@ class POKEMONCYBERPUNK_API ABattlePokemon : public AActor
 public:
 	ABattlePokemon();
 	void EnterBattle();
+
+	const TArray<FText>& GetMoveNames() const { return MoveNames; }
 
 	UFUNCTION(BlueprintPure, Category = "Pokemon")
 	FText GetDisplayName() const
@@ -56,6 +60,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Pokemon")
 	TObjectPtr<UAnimSequence> IdleAnimation;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Pokemon")
+	TArray<FText> MoveNames;
 
 private:
 	UPROPERTY(Transient)

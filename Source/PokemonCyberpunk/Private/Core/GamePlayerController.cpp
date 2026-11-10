@@ -7,6 +7,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "GameFramework/PawnMovementComponent.h"
 #include "UI/BattleHUDWidget.h"
+#include "UI/BattleCommandsWidget.h"
 #include "UI/DialogueWidget.h"
 
 void AGamePlayerController::SetupInputComponent()
@@ -55,6 +56,7 @@ bool AGamePlayerController::OpenDialogue(ADialogueCharacter* Speaker)
 		Wes->PrepareForDialogue(Speaker);
 	}
 	DialogueUI->ShowConversation(Speaker);
+	// Dialogue takes control of the keys and mouse; Wes stays still until it closes.
 	SetIgnoreMoveInput(true);
 	SetIgnoreLookInput(true);
 	SetShowMouseCursor(true);
@@ -132,6 +134,22 @@ void AGamePlayerController::ShowBattleHUD(const TArray<TObjectPtr<ABattlePokemon
 	BattleUI->ShowTeams(PlayerTeam, OpponentTeam);
 }
 
+void AGamePlayerController::ShowBattleCommands(ABattleManager* Battle)
+{
+	if (!bInBattle || !BattleCommandsClass)
+	{
+		return;
+	}
+	if (!BattleCommandsUI)
+	{
+		BattleCommandsUI = CreateWidget<UBattleCommandsWidget>(this, BattleCommandsClass);
+		BattleCommandsUI->AddToPlayerScreen();
+	}
+	SetShowMouseCursor(true);
+	UWidgetBlueprintLibrary::SetInputMode_UIOnlyEx(this, BattleCommandsUI, EMouseLockMode::DoNotLock, true);
+	BattleCommandsUI->ShowBattle(Battle);
+}
+
 void AGamePlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	if (ActiveSpeaker.IsValid())
@@ -146,6 +164,10 @@ void AGamePlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	if (BattleUI)
 	{
 		BattleUI->RemoveFromParent();
+	}
+	if (BattleCommandsUI)
+	{
+		BattleCommandsUI->RemoveFromParent();
 	}
 	if (ULocalPlayer* LocalPlayer = GetLocalPlayer())
 	{

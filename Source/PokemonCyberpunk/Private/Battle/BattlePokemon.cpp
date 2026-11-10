@@ -22,6 +22,7 @@ void ABattlePokemon::BeginPlay()
 	Super::BeginPlay();
 	MaxHealth = FMath::Max(1, MaxHealth);
 	CurrentHealth = MaxHealth;
+	// Pokemon wait out of sight and stop animating while the player is exploring.
 	SetActorHiddenInGame(true);
 	Body->SetComponentTickEnabled(false);
 }
@@ -41,6 +42,7 @@ void ABattlePokemon::EnterBattle()
 
 void ABattlePokemon::SetHealth(int32 NewHealth)
 {
+	// Keep health within its allowed range, then notify any health cards watching it.
 	const int32 ClampedHealth = FMath::Clamp(NewHealth, 0, MaxHealth);
 	if (CurrentHealth == ClampedHealth)
 	{

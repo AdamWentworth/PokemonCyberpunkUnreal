@@ -7,6 +7,7 @@
 class ABattlePokemon;
 class UBattleStatusWidget;
 
+// Arranges the two teams' health cards. Each card updates when its Pokemon's health changes.
 UCLASS(Abstract)
 class POKEMONCYBERPUNK_API UBattleHUDWidget : public UUserWidget
 {

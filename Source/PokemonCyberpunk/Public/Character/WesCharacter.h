@@ -11,6 +11,7 @@ class UPrimitiveComponent;
 class USpringArmComponent;
 struct FInputActionValue;
 
+// The playable trainer. Unreal handles walking and collision; this class connects input and interaction.
 UCLASS()
 class POKEMONCYBERPUNK_API AWesCharacter : public ACharacter
 {

@@ -12,6 +12,7 @@ class UInteractable : public UInterface
 	GENERATED_BODY()
 };
 
+// Anything implementing this interface can respond to the player's interact button.
 class POKEMONCYBERPUNK_API IInteractable
 {
 	GENERATED_BODY()

@@ -8,6 +8,7 @@ class AWillieCharacter;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FBattleChallengeAccepted, AWillieCharacter*, Trainer);
 
+// Willie uses the shared dialogue behavior and offers a battle when the player accepts.
 UCLASS()
 class POKEMONCYBERPUNK_API AWillieCharacter : public ADialogueCharacter
 {

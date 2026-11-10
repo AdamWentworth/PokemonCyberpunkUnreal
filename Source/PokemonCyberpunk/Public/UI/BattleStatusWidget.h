@@ -8,6 +8,7 @@ class ABattlePokemon;
 class UProgressBar;
 class UTextBlock;
 
+// One reusable health card. The battle HUD places one copy for each Pokemon.
 UCLASS(Abstract)
 class POKEMONCYBERPUNK_API UBattleStatusWidget : public UUserWidget
 {

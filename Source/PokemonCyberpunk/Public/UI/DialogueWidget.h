@@ -10,6 +10,7 @@ class UButton;
 class UHorizontalBox;
 class UTextBlock;
 
+// Displays the current conversation. The NPC owns its text and progress; this class handles the controls.
 UCLASS(Abstract)
 class POKEMONCYBERPUNK_API UDialogueWidget : public UUserWidget
 {
@@ -25,6 +26,7 @@ protected:
 	virtual void NativeOnInitialized() override;
 	virtual FReply NativeOnKeyDown(const FGeometry& Geometry, const FKeyEvent& KeyEvent) override;
 
+	// These names match controls in the Widget Blueprint, where the layout and styling are edited.
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UBorder> TalkPrompt;
 

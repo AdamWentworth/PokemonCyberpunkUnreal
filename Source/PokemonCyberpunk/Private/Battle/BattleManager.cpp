@@ -67,7 +67,72 @@ void ABattleManager::StartBattle(AWillieCharacter* Trainer)
 			}
 		}
 		PlayerController->ShowBattleHUD(PlayerTeam, OpponentTeam);
+		QueuedCommands.Reset();
+		SelectingPlayerIndex = 0;
+		SelectedMoveIndex = INDEX_NONE;
+		bSelectingCommands = true;
+		PlayerController->ShowBattleCommands(this);
 	}
+}
+
+ABattlePokemon* ABattleManager::GetSelectingPokemon() const
+{
+	return bSelectingCommands && PlayerTeam.IsValidIndex(SelectingPlayerIndex)
+		? PlayerTeam[SelectingPlayerIndex].Get() : nullptr;
+}
+
+void ABattleManager::ChooseOption(int32 OptionIndex)
+{
+	ABattlePokemon* Pokemon = GetSelectingPokemon();
+	if (!IsValid(Pokemon) || Pokemon->GetHealth() == 0)
+	{
+		return;
+	}
+
+	if (!IsSelectingTarget())
+	{
+		// The first click chooses a move. The next click chooses who receives it.
+		if (!Pokemon->GetMoveNames().IsValidIndex(OptionIndex))
+		{
+			return;
+		}
+		SelectedMoveIndex = OptionIndex;
+	}
+	else
+	{
+		if (!OpponentTeam.IsValidIndex(OptionIndex) || !IsValid(OpponentTeam[OptionIndex])
+			|| OpponentTeam[OptionIndex]->GetHealth() == 0)
+		{
+			return;
+		}
+		FBattleCommand Command;
+		Command.Pokemon = Pokemon;
+		Command.MoveIndex = SelectedMoveIndex;
+		Command.Target = OpponentTeam[OptionIndex];
+		QueuedCommands.Add(Command);
+		++SelectingPlayerIndex;
+		SelectedMoveIndex = INDEX_NONE;
+	}
+	OnSelectionChanged.Broadcast();
+}
+
+void ABattleManager::GoBack()
+{
+	if (!CanGoBack())
+	{
+		return;
+	}
+	if (IsSelectingTarget())
+	{
+		SelectedMoveIndex = INDEX_NONE;
+	}
+	else
+	{
+		// Undo the previous Pokemon's choice so the player can change it.
+		--SelectingPlayerIndex;
+		QueuedCommands.Pop();
+	}
+	OnSelectionChanged.Broadcast();
 }
 
 void ABattleManager::PlaceTrainer(ACharacter* Trainer, const USceneComponent* Position)

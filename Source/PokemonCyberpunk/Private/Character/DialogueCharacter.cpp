@@ -70,6 +70,7 @@ FText ADialogueCharacter::GetCurrentLine() const
 
 void ADialogueCharacter::AdvanceDialogue()
 {
+	// Finish the current pages before showing the question or ending the conversation.
 	if (!TalkingPlayer.IsValid() || DialogueStage == EDialogueStage::Closed || IsChoosingResponse())
 	{
 		return;
@@ -133,6 +134,7 @@ void ADialogueCharacter::FinishConversation(EDialogueResult Result)
 		TalkingPlayer->CloseDialogue();
 	}
 	TalkingPlayer.Reset();
+	// Notify listeners only after the final line closes, so a battle cannot interrupt the reply.
 	OnDialogueFinished.Broadcast(this, Result);
 }
 
