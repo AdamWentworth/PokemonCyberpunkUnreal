@@ -8,56 +8,73 @@ class ABattleManager;
 class UButton;
 class UTextBlock;
 
-// The same buttons show moves first, then targets. The battle manager stores the choices.
+// Controls the battle menu where players select moves and targets.
+// The same four buttons are reused for different battle actions.
 UCLASS(Abstract)
 class POKEMONCYBERPUNK_API UBattleCommandsWidget : public UUserWidget
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
 public:
-	void ShowBattle(ABattleManager* InBattle);
+    // Connects the interface to the active battle manager.
+    void ShowBattle(ABattleManager* InBattle);
 
 protected:
-	virtual void NativeOnInitialized() override;
-	virtual void NativeDestruct() override;
+    // Called when the widget initializes and when it is destroyed.
+    virtual void NativeOnInitialized() override;
+    virtual void NativeDestruct() override;
 
-	// BindWidget connects these fields to equally named controls in the Widget Blueprint.
-	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UTextBlock> PromptText;
+    // BindWidget connects these variables to UI elements
+    // with matching names in the Widget Blueprint.
+    UPROPERTY(meta = (BindWidget))
+    TObjectPtr<UTextBlock> PromptText;
 
-	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UTextBlock> SelectionSummary;
+    // Displays selected attacks or the results of the current turn.
+    UPROPERTY(meta = (BindWidget))
+    TObjectPtr<UTextBlock> SelectionSummary;
 
-	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UButton> OptionOne;
+    // Four reusable buttons for moves, targets, and turn controls.
+    UPROPERTY(meta = (BindWidget))
+    TObjectPtr<UButton> OptionOne;
 
-	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UButton> OptionTwo;
+    UPROPERTY(meta = (BindWidget))
+    TObjectPtr<UButton> OptionTwo;
 
-	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UButton> OptionThree;
+    UPROPERTY(meta = (BindWidget))
+    TObjectPtr<UButton> OptionThree;
 
-	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UButton> OptionFour;
+    UPROPERTY(meta = (BindWidget))
+    TObjectPtr<UButton> OptionFour;
 
-	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UButton> BackButton;
+    // Allows the player to undo a selection before executing the turn.
+    UPROPERTY(meta = (BindWidget))
+    TObjectPtr<UButton> BackButton;
 
 private:
-	UFUNCTION()
-	void RefreshOptions();
+    // Updates the menu whenever the battle's current selections change.
+    UFUNCTION()
+    void RefreshOptions();
 
-	UFUNCTION()
-	void ChooseFirst();
-	UFUNCTION()
-	void ChooseSecond();
-	UFUNCTION()
-	void ChooseThird();
-	UFUNCTION()
-	void ChooseFourth();
-	UFUNCTION()
-	void GoBack();
+    // Each button calls its corresponding function when clicked.
+    UFUNCTION()
+    void ChooseFirst();
 
-	void ChooseOption(int32 Index);
-	TWeakObjectPtr<ABattleManager> Battle;
+    UFUNCTION()
+    void ChooseSecond();
+
+    UFUNCTION()
+    void ChooseThird();
+
+    UFUNCTION()
+    void ChooseFourth();
+
+    UFUNCTION()
+    void GoBack();
+
+    // Forwards the selected button index to the BattleManager.
+    void ChooseOption(int32 Index);
+
+    // Weak reference to the active battle manager.
+    // Does not prevent the manager from being destroyed.
+    TWeakObjectPtr<ABattleManager> Battle;
 };

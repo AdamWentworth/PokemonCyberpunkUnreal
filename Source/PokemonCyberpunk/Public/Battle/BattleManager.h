@@ -4,6 +4,7 @@
 #include "GameFramework/Actor.h"
 #include "BattleManager.generated.h"
 
+// Declare classes used by this header without loading their full definitions.
 class AWillieCharacter;
 class ABattlePokemon;
 class UCameraComponent;
@@ -11,108 +12,123 @@ class ACharacter;
 class USceneComponent;
 class AGamePlayerController;
 
+// The four possible stages of a battle.
 UENUM(BlueprintType)
 enum class EBattlePhase : uint8
 {
-	Inactive,
-	ChoosingCommands,
-	ShowingTurnResult,
-	Finished
+    Inactive,
+    ChoosingCommands,
+    ShowingTurnResult,
+    Finished
 };
 
-// A choice for one Pokemon. Selecting a command does not apply its damage yet.
+// Stores a Pokemon's chosen attack and its intended target.
+// The attack is executed later, when the turn is resolved.
 USTRUCT(BlueprintType)
 struct FBattleCommand
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
-	UPROPERTY(BlueprintReadOnly)
-	TObjectPtr<ABattlePokemon> Pokemon;
+    UPROPERTY(BlueprintReadOnly)
+    TObjectPtr<ABattlePokemon> Pokemon;
 
-	UPROPERTY(BlueprintReadOnly)
-	int32 MoveIndex = INDEX_NONE;
+    UPROPERTY(BlueprintReadOnly)
+    int32 MoveIndex = INDEX_NONE;
 
-	UPROPERTY(BlueprintReadOnly)
-	TObjectPtr<ABattlePokemon> Target;
+    UPROPERTY(BlueprintReadOnly)
+    TObjectPtr<ABattlePokemon> Target;
 };
 
+// Defines an event that other objects can listen to when selections change.
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FBattleSelectionChanged);
 
-// Sets up the encounter and keeps the player's choices separate from the UI.
+// Coordinates battles, including commands, turn progression, and battle outcomes.
 UCLASS()
 class POKEMONCYBERPUNK_API ABattleManager : public AActor
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
 public:
-	ABattleManager();
+    ABattleManager();
 
-	UFUNCTION(BlueprintCallable, Category = "Battle")
-	void ChooseOption(int32 OptionIndex);
+    // Functions exposed to Unreal Blueprints for handling player selections.
+    UFUNCTION(BlueprintCallable, Category = "Battle")
+    void ChooseOption(int32 OptionIndex);
 
-	UFUNCTION(BlueprintCallable, Category = "Battle")
-	void GoBack();
+    UFUNCTION(BlueprintCallable, Category = "Battle")
+    void GoBack();
 
-	UFUNCTION(BlueprintPure, Category = "Battle")
-	ABattlePokemon* GetSelectingPokemon() const;
+    UFUNCTION(BlueprintPure, Category = "Battle")
+    ABattlePokemon* GetSelectingPokemon() const;
 
-	bool IsSelectingTarget() const { return SelectedMoveIndex != INDEX_NONE; }
-	bool AreCommandsReady() const { return Phase == EBattlePhase::ChoosingCommands && SelectingPlayerIndex >= PlayerTeam.Num(); }
-	bool CanGoBack() const { return Phase == EBattlePhase::ChoosingCommands && (IsSelectingTarget() || !QueuedCommands.IsEmpty()); }
-	int32 GetSelectedMoveIndex() const { return SelectedMoveIndex; }
-	const TArray<TObjectPtr<ABattlePokemon>>& GetOpponentTeam() const { return OpponentTeam; }
-	EBattlePhase GetPhase() const { return Phase; }
-	bool HasPlayerWon() const { return bPlayerWon; }
-	const FText& GetTurnSummary() const { return TurnSummary; }
+    // Helper functions that report the current battle state.
+    bool IsSelectingTarget() const { return SelectedMoveIndex != INDEX_NONE; }
+    bool AreCommandsReady() const { return Phase == EBattlePhase::ChoosingCommands && SelectingPlayerIndex >= PlayerTeam.Num(); }
+    bool CanGoBack() const { return Phase == EBattlePhase::ChoosingCommands && (IsSelectingTarget() || !QueuedCommands.IsEmpty()); }
+    int32 GetSelectedMoveIndex() const { return SelectedMoveIndex; }
+    const TArray<TObjectPtr<ABattlePokemon>>& GetOpponentTeam() const { return OpponentTeam; }
+    EBattlePhase GetPhase() const { return Phase; }
+    bool HasPlayerWon() const { return bPlayerWon; }
+    const FText& GetTurnSummary() const { return TurnSummary; }
 
-	UFUNCTION(BlueprintPure, Category = "Battle")
-	const TArray<FBattleCommand>& GetQueuedCommands() const { return QueuedCommands; }
+    UFUNCTION(BlueprintPure, Category = "Battle")
+    const TArray<FBattleCommand>& GetQueuedCommands() const { return QueuedCommands; }
 
-	UPROPERTY(BlueprintAssignable, Category = "Battle")
-	FBattleSelectionChanged OnSelectionChanged;
+    // Broadcast whenever the battle menu needs to refresh.
+    UPROPERTY(BlueprintAssignable, Category = "Battle")
+    FBattleSelectionChanged OnSelectionChanged;
 
 protected:
-	virtual void BeginPlay() override;
+    virtual void BeginPlay() override;
 
-	UPROPERTY(VisibleAnywhere, Category = "Battle")
-	TObjectPtr<UCameraComponent> BattleCamera;
+    // Camera and opponent references configured through Unreal.
+    UPROPERTY(VisibleAnywhere, Category = "Battle")
+    TObjectPtr<UCameraComponent> BattleCamera;
 
-	UPROPERTY(EditInstanceOnly, Category = "Battle")
-	TObjectPtr<AWillieCharacter> Opponent;
+    UPROPERTY(EditInstanceOnly, Category = "Battle")
+    TObjectPtr<AWillieCharacter> Opponent;
 
-	UPROPERTY(EditInstanceOnly, Category = "Battle")
-	TArray<TObjectPtr<ABattlePokemon>> PlayerTeam;
+    // Team members can be assigned to this battle in the Unreal Editor.
+    UPROPERTY(EditInstanceOnly, Category = "Battle")
+    TArray<TObjectPtr<ABattlePokemon>> PlayerTeam;
 
-	UPROPERTY(EditInstanceOnly, Category = "Battle")
-	TArray<TObjectPtr<ABattlePokemon>> OpponentTeam;
+    UPROPERTY(EditInstanceOnly, Category = "Battle")
+    TArray<TObjectPtr<ABattlePokemon>> OpponentTeam;
 
-	UPROPERTY(VisibleAnywhere, Category = "Battle")
-	TObjectPtr<USceneComponent> PlayerTrainerPosition;
+    // Invisible markers identifying where trainers stand during combat.
+    UPROPERTY(VisibleAnywhere, Category = "Battle")
+    TObjectPtr<USceneComponent> PlayerTrainerPosition;
 
-	UPROPERTY(VisibleAnywhere, Category = "Battle")
-	TObjectPtr<USceneComponent> OpponentTrainerPosition;
+    UPROPERTY(VisibleAnywhere, Category = "Battle")
+    TObjectPtr<USceneComponent> OpponentTrainerPosition;
 
 private:
-	void PlaceTrainer(ACharacter* Trainer, const USceneComponent* Position);
-	void BeginTurn();
-	void SkipFaintedPokemon();
-	void ResolveTurn();
-	void ApplyAttack(ABattlePokemon* Attacker, ABattlePokemon* Target, int32 MoveIndex, TArray<FText>& Messages);
-	void ReturnToExploration();
-	ABattlePokemon* FindFirstActivePokemon(const TArray<TObjectPtr<ABattlePokemon>>& Team) const;
+    // Internal functions responsible for managing the battle.
+    void PlaceTrainer(ACharacter* Trainer, const USceneComponent* Position);
+    void BeginTurn();
+    void SkipFaintedPokemon();
+    void ResolveTurn();
+    void ApplyAttack(ABattlePokemon* Attacker, ABattlePokemon* Target, int32 MoveIndex, TArray<FText>& Messages);
+    void ReturnToExploration();
+    ABattlePokemon* FindFirstActivePokemon(const TArray<TObjectPtr<ABattlePokemon>>& Team) const;
 
-	UFUNCTION()
-	void StartBattle(AWillieCharacter* Trainer);
+    // Called when Willie announces an accepted battle challenge.
+    UFUNCTION()
+    void StartBattle(AWillieCharacter* Trainer);
 
-	UPROPERTY(Transient)
-	TArray<FBattleCommand> QueuedCommands;
+    // Stores attacks selected by the player until the turn executes.
+    UPROPERTY(Transient)
+    TArray<FBattleCommand> QueuedCommands;
 
-	EBattlePhase Phase = EBattlePhase::Inactive;
-	int32 SelectingPlayerIndex = 0;
-	int32 SelectedMoveIndex = INDEX_NONE;
-	bool bPlayerWon = false;
-	FText TurnSummary;
-	FTransform PlayerExplorationTransform;
-	FTransform OpponentExplorationTransform;
-	TWeakObjectPtr<AGamePlayerController> BattlePlayer;
+    // Tracks the battle's current stage, selections, and outcome.
+    EBattlePhase Phase = EBattlePhase::Inactive;
+    int32 SelectingPlayerIndex = 0;
+    int32 SelectedMoveIndex = INDEX_NONE;
+    bool bPlayerWon = false;
+    FText TurnSummary;
+
+    // Remember the trainers' original positions and the player's controller.
+    FTransform PlayerExplorationTransform;
+    FTransform OpponentExplorationTransform;
+    TWeakObjectPtr<AGamePlayerController> BattlePlayer;
 };
