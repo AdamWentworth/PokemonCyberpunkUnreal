@@ -2,7 +2,7 @@
   "FileVersion": 3,
   "EngineAssociation": "5.8",
   "Category": "",
-  "Description": "Unreal prototype for PokemonCyberpunk; the Phlosion project is separate.",
+  "Description": "Unreal Engine 5 game prototype for Pokémon Cyberpunk.",
   "Modules": [
     {
       "Name": "PokemonCyberpunk",
